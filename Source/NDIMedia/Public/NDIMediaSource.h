@@ -8,7 +8,7 @@
 #include "NDIMediaSource.generated.h"
 
 UENUM(BlueprintType)
-enum class ENDIMediaPixelFormat : uint8
+enum class ENDIMediaInputPixelFormat : uint8
 {
 	NDI_PF_RGB		UMETA(DisplayName="RGB 8bit"),
 	NDI_PF_P216		UMETA(DisplayName="YUV 16bit"),
@@ -26,7 +26,7 @@ public:
 	FString SourceName = FString("Test Pattern");
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Source")
-	ENDIMediaPixelFormat NDIPixelFormat = ENDIMediaPixelFormat::NDI_PF_RGB;
+	ENDIMediaInputPixelFormat InputPixelFormat = ENDIMediaInputPixelFormat::NDI_PF_RGB;
 
 	virtual bool Validate() const override { return true; }
 	virtual FString GetUrl() const override;

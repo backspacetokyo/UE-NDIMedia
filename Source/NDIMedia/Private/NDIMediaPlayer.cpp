@@ -95,7 +95,7 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 		///
 
 		const UNDIMediaSource* Source = static_cast<const UNDIMediaSource*>(Options);
-		ENDIMediaPixelFormat NDIPixelFormat = Source->NDIPixelFormat;
+		ENDIMediaInputPixelFormat NDIPixelFormat = Source->InputPixelFormat;
 
 		///
 
@@ -103,15 +103,15 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 		settings.bandwidth = NDIlib_recv_bandwidth_highest;
 		settings.allow_video_fields = false;
 
-		if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_RGB)
+		if (NDIPixelFormat == ENDIMediaInputPixelFormat::NDI_PF_RGB)
 		{
 			settings.color_format = NDIlib_recv_color_format_BGRX_BGRA;
 		}
-		else if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_P216)
+		else if (NDIPixelFormat == ENDIMediaInputPixelFormat::NDI_PF_P216)
 		{
 			settings.color_format = NDIlib_recv_color_format_best;
 		}
-		else if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_422)
+		else if (NDIPixelFormat == ENDIMediaInputPixelFormat::NDI_PF_422)
 		{
 			settings.color_format = NDIlib_recv_color_format_fastest;
 		}
@@ -157,6 +157,9 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 		bVideoBufferUnderflowDetected = true;
 		Samples->PopVideo();
 	}
+
+	while (Samples->NumMetadataSamples() > 1)
+		Samples->PopMetadata();
 
 	if (bVideoBufferUnderflowDetected)
 	{

@@ -22,7 +22,7 @@ class NDIMEDIA_API FNDIMediaPlayer
 
 	FNDIMediaTextureSamplePool* TextureSamplePool;
 	FNDIMediaBinarySamplePool* MetadataSamplePool;
-	
+
 public:
 	FNDIMediaPlayer(IMediaEventSink& InEventSink);
 	virtual ~FNDIMediaPlayer() override;

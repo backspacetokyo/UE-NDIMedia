@@ -4,6 +4,8 @@
 #include "NDIMediaPlayer.h"
 
 #include "NDIMedia.h"
+#include "NDIMediaSource.h"
+
 #include "IMediaEventSink.h"
 #include "MediaIOCoreSamples.h"
 
@@ -90,24 +92,35 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 			return false;
 		}
 
+		///
+
+		const UNDIMediaSource* Source = static_cast<const UNDIMediaSource*>(Options);
+		ENDIMediaPixelFormat NDIPixelFormat = Source->NDIPixelFormat;
+
+		///
+
 		NDIlib_recv_create_v3_t settings;
 		settings.bandwidth = NDIlib_recv_bandwidth_highest;
 		settings.allow_video_fields = false;
-		// settings.color_format = NDIlib_recv_color_format_BGRX_BGRA;
-		// settings.color_format = NDIlib_recv_color_format_best;
-		settings.color_format = NDIlib_recv_color_format_fastest;
+
+		if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_RGB)
+		{
+			settings.color_format = NDIlib_recv_color_format_BGRX_BGRA;
+		}
+		else if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_P216)
+		{
+			settings.color_format = NDIlib_recv_color_format_best;
+		}
+		else if (NDIPixelFormat == ENDIMediaPixelFormat::NDI_PF_422)
+		{
+			settings.color_format = NDIlib_recv_color_format_fastest;
+		}
 		
 		pNDI_recv = NDIlib_recv_create_v3(&settings);
 		NDIlib_recv_connect(pNDI_recv, p_source + source_index);
 
 		CurrentState = EMediaState::Playing;
 		EventSink.ReceiveMediaEvent(EMediaEvent::MediaConnecting);
-
-		///
-		
-		// const UNDIVirtualMediaSource* Source = static_cast<const UNDIVirtualMediaSource*>(Options);
-		// this->CineCameraActor = Source->Camera;
-		// this->MetadataDelayFrames = Source->MetadataDelayFrames;
 	}
 	
 	return true;

@@ -93,9 +93,9 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 		NDIlib_recv_create_v3_t settings;
 		settings.bandwidth = NDIlib_recv_bandwidth_highest;
 		settings.allow_video_fields = false;
-		settings.color_format = NDIlib_recv_color_format_BGRX_BGRA;
+		// settings.color_format = NDIlib_recv_color_format_BGRX_BGRA;
 		// settings.color_format = NDIlib_recv_color_format_UYVY_BGRA;
-		// settings.color_format = NDIlib_recv_color_format_best;
+		settings.color_format = NDIlib_recv_color_format_best;
 		
 		pNDI_recv = NDIlib_recv_create_v3(&settings);
 		NDIlib_recv_connect(pNDI_recv, p_source + source_index);
@@ -209,27 +209,70 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 		
 			Samples->AddVideo(TextureSample);
 		}
-		else if (video_frame->FourCC == NDIlib_FourCC_type_P216)
+		else if (video_frame->FourCC == NDIlib_FourCC_type_P216
+			|| video_frame->FourCC == NDIlib_FourCC_type_PA16)
 		{
-			NDIlib_video_frame_v2_t* V210_frame = new NDIlib_video_frame_v2_t();
-
-			int line_stride_in_bytes = video_frame->xres * 4;
-			
-			V210_frame->line_stride_in_bytes = line_stride_in_bytes;
-			std::vector<uint8_t> buffer(line_stride_in_bytes * video_frame->yres);
-			V210_frame->p_data = &buffer[0];
-
-			NDIlib_util_P216_to_V210(video_frame, V210_frame);
-
 			const auto TextureSample = TextureSamplePool->AcquireShared();
+
+			const int line_stride_in_bytes = video_frame->xres * sizeof(uint16_t) * 4;
 			
+			int n_pixels = video_frame->xres * video_frame->yres;
+			std::vector<unsigned short> buffer(n_pixels * 4);
+
+			const uint16_t* luminance = (const uint16_t*)video_frame->p_data;
+			const uint16_t* cbcr = (const uint16_t*)video_frame->p_data + n_pixels;
+
+			uint16_t* ptr;
+
+			if (video_frame->FourCC == NDIlib_FourCC_type_P216)
+			{
+				ptr = &buffer[0];
+				for (int i = 0; i < n_pixels; i++)
+				{
+					ptr[0] = 0xFFFF; // A
+					ptr[1] = *luminance; // Y
+
+					ptr += 4;
+					luminance++;
+				}
+			}
+			else if (video_frame->FourCC == NDIlib_FourCC_type_PA16)
+			{
+				const uint16_t* alpha = (const uint16_t*)video_frame->p_data + (int)(n_pixels * 2);
+
+				ptr = &buffer[0];
+				for (int i = 0; i < n_pixels; i++)
+				{
+					ptr[0] = *alpha; // A
+					ptr[1] = *luminance; // Y
+
+					ptr += 4;
+					luminance++;
+					alpha++;
+				}
+			}
+
+			ptr = &buffer[0];
+			for (int i = 0; i < n_pixels; i += 2)
+			{
+				ptr[2] = cbcr[0]; // Cb
+				ptr[3] = cbcr[1]; // Cr
+				ptr += 4;
+
+				ptr[2] = cbcr[0]; // Cb
+				ptr[3] = cbcr[1]; // Cr
+				ptr += 4;
+
+				cbcr += 2;
+			}
+
 			TextureSample->Initialize(
-				V210_frame->p_data,
-				V210_frame->line_stride_in_bytes * V210_frame->yres,
-				V210_frame->line_stride_in_bytes,
-				V210_frame->xres,
-				V210_frame->yres,
-				EMediaTextureSampleFormat::YUVv210,
+				&buffer[0],
+				line_stride_in_bytes * video_frame->yres,
+				line_stride_in_bytes,
+				video_frame->xres,
+				video_frame->yres,
+				EMediaTextureSampleFormat::Y416,
 				DecodedTime,
 				FrameRate,
 				DecodedTimecode,
@@ -237,8 +280,6 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 			);
 			
 			Samples->AddVideo(TextureSample);
-
-			delete V210_frame;
 		}
 		else
 		{

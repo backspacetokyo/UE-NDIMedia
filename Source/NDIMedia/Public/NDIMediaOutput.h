@@ -22,13 +22,13 @@ class NDIMEDIA_API UNDIMediaOutput
 	GENERATED_UCLASS_BODY()
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Output")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	FString SourceName = FString("UnrealEngile");
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Output")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	FIntPoint OutputSize = FIntPoint(1920, 1080);
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Source")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	ENDIMediaOutputPixelFormat OutputPixelFormat = ENDIMediaOutputPixelFormat::NDI_PF_RGB;
 
 	virtual bool Validate(FString& OutFailureReason) const override;

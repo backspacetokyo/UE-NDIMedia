@@ -4,6 +4,8 @@
 #include "NDIMediaCapture.h"
 #include "NDIMediaOutput.h"
 
+#include <chrono>
+
 struct NDIFrameBuffer
 {
 	NDIlib_video_frame_v2_t frame;
@@ -59,12 +61,10 @@ void UNDIMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 	TSharedPtr<FMediaCaptureUserData, ESPMode::ThreadSafe> InUserData, void* InBuffer, int32 Width, int32 Height,
 	int32 BytesPerRow)
 {
-	FScopeLock ScopeLock(&RenderThreadCriticalSection);
+	NDIFrameBuffer* FrameBuffer = new NDIFrameBuffer();
 
-	NDIFrameBuffer* FrameBuffer = FrameBuffers[CurrentFrameBufferIndex];
-
-	CurrentFrameBufferIndex++;
-	CurrentFrameBufferIndex %= FrameBuffers.size();
+	FrameBuffer->frame.frame_rate_N = 60;
+	FrameBuffer->frame.frame_rate_D = 1;
 	
 	if (OutputPixelFormat == ENDIMediaOutputPixelFormat::NDI_PF_P210)
 	{
@@ -74,7 +74,7 @@ void UNDIMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 		video_frame_V210.yres = Height;
 		video_frame_V210.FourCC = NDIlib_FourCC_type_P216;
 		video_frame_V210.p_data = (uint8_t*)InBuffer;
-
+	
 		NDIlib_video_frame_v2_t& video_frame_V216 = FrameBuffer->frame;
 		video_frame_V216.line_stride_in_bytes = video_frame_V210.xres * sizeof(uint16_t) * 4;
 	
@@ -97,7 +97,12 @@ void UNDIMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 		video_frame_rgb.p_data = &FrameBuffer->buffer[0];
 	}
 
-	NDIlib_send_send_video_async_v2(pNDI_send, &FrameBuffer->frame);
+	// NDIlib_send_send_video_async_v2(pNDI_send, &FrameBuffer->frame);
+
+	{
+		FScopeLock ScopeLock(&RenderThreadCriticalSection);
+		FrameBuffers.push_back(FrameBuffer);
+	}
 }
 
 bool UNDIMediaCapture::InitNDI(UNDIMediaOutput* Output)
@@ -124,6 +129,38 @@ bool UNDIMediaCapture::InitNDI(UNDIMediaOutput* Output)
 	for (int i = 0; i < FrameBuffers.size(); i++)
 		FrameBuffers[i] = new NDIFrameBuffer();
 
+	NDISendThreadRunning = true;
+	NDISendThread = std::thread([this]()
+	{
+		while (this->NDISendThreadRunning)
+		{
+			bool has_queue = false;
+
+			{
+				FScopeLock ScopeLock(&this->RenderThreadCriticalSection);
+				has_queue = this->FrameBuffers.size() > 0;
+			}
+
+			if (has_queue)
+			{
+				NDIFrameBuffer* FrameBuffer = nullptr;
+				{
+					FScopeLock ScopeLock(&this->RenderThreadCriticalSection);
+					FrameBuffer = this->FrameBuffers.front();
+					this->FrameBuffers.pop_front();
+				}
+
+				NDIlib_send_send_video_v2(pNDI_send, &FrameBuffer->frame);
+				
+				delete FrameBuffer;
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+		}
+	});
+	
 	return true;
 }
 
@@ -131,6 +168,9 @@ bool UNDIMediaCapture::DisposeNDI()
 {
 	FScopeLock ScopeLock(&RenderThreadCriticalSection);
 
+	NDISendThreadRunning = false;
+	NDISendThread.join();
+	
 	if (pNDI_send)
 	{
 		NDIlib_send_destroy(pNDI_send);

@@ -22,10 +22,10 @@ class NDIMEDIA_API UNDIMediaSource
 	GENERATED_UCLASS_BODY()
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Source")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	FString SourceName = FString("Test Pattern");
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Source")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	ENDIMediaInputPixelFormat InputPixelFormat = ENDIMediaInputPixelFormat::NDI_PF_RGB;
 
 	virtual bool Validate() const override { return true; }

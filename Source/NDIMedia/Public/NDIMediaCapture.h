@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include <thread>
+#include <atomic>
+#include <deque>
+
 #include "CoreMinimal.h"
 #include "MediaCapture.h"
 #include "NDIMediaOutput.h"
@@ -42,8 +46,11 @@ private:
 	FCriticalSection RenderThreadCriticalSection;
 	ENDIMediaOutputPixelFormat OutputPixelFormat;
 
-	std::vector<NDIFrameBuffer*> FrameBuffers;
+	std::deque<NDIFrameBuffer*> FrameBuffers;
 	uint8_t CurrentFrameBufferIndex = 0;
+
+	std::thread NDISendThread;
+	std::atomic_bool NDISendThreadRunning = false;
 
 	bool InitNDI(UNDIMediaOutput* Output);
 	bool DisposeNDI();

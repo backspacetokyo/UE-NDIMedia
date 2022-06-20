@@ -121,7 +121,13 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 
 		CurrentState = EMediaState::Playing;
 		EventSink.ReceiveMediaEvent(EMediaEvent::MediaConnecting);
+
+		EventSink.ReceiveMediaEvent(EMediaEvent::TracksChanged);
+		EventSink.ReceiveMediaEvent(EMediaEvent::MediaOpened);
+		EventSink.ReceiveMediaEvent(EMediaEvent::PlaybackResumed);
 	}
+
+	SetRate(1);
 	
 	return true;
 }
@@ -141,11 +147,13 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 {
 	FMediaIOCorePlayerBase::TickFetch(DeltaTime, Timecode);
 
-	if (!pNDI_recv)
+	if (!pNDI_recv || CurrentState != EMediaState::Playing)
+	{
+		SetRate(0);
 		return;
+	}
 
-	if (CurrentState != EMediaState::Playing)
-		return;
+	SetRate(1);
 
 	const int TimeoutInMS = 0;
 	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
@@ -175,11 +183,10 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 		// metadata
 		if (video_frame->p_metadata)
 		{
-			const FString Metadata = FString(video_frame->p_metadata);
-
+			std::string str = video_frame->p_metadata;
 			const auto BinarySample = MetadataSamplePool->AcquireShared();
 
-			BinarySample->Initialize((const uint8_t*)GetData(Metadata), GetNum(Metadata),
+			BinarySample->Initialize((const uint8_t*)str.c_str(), str.size() + 1,
 				DecodedTime, FrameRate, DecodedTimecode);
 
 			Samples->AddMetadata(BinarySample);

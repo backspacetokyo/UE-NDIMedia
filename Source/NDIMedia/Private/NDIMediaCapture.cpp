@@ -5,6 +5,7 @@
 #include "NDIMediaOutput.h"
 
 #include <chrono>
+#include <vector>
 
 struct NDIFrameBuffer
 {

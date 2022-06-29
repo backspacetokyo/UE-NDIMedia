@@ -3,6 +3,11 @@
 
 #include "NDIMediaPlayer.h"
 
+#include <string>
+#include <vector>
+
+#include "Internationalization/Regex.h"
+
 #include "NDIMedia.h"
 #include "NDIMediaSource.h"
 

@@ -49,11 +49,6 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 		return false;
 	}
 
-	if (!Super::Open(Url, Options))
-	{
-		return false;
-	}
-
 	FString Scheme;
 	FString Location;
 

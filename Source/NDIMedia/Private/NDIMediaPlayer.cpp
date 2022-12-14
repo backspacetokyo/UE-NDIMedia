@@ -125,6 +125,8 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 		EventSink.ReceiveMediaEvent(EMediaEvent::TracksChanged);
 		EventSink.ReceiveMediaEvent(EMediaEvent::MediaOpened);
 		EventSink.ReceiveMediaEvent(EMediaEvent::PlaybackResumed);
+
+		ReceiveTimeoutInMilliSeconds = Source->ReceiveTimeoutInMilliSeconds;
 	}
 
 	SetRate(1);
@@ -155,9 +157,12 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 
 	SetRate(1);
 
-	const int TimeoutInMS = 0;
 	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
-	NDIlib_frame_type_e frame_type = NDIlib_recv_capture_v3(pNDI_recv, video_frame, nullptr, nullptr, TimeoutInMS);
+	NDIlib_frame_type_e frame_type = NDIlib_recv_capture_v3(pNDI_recv, video_frame,
+		nullptr, nullptr,
+		ReceiveTimeoutInMilliSeconds);
+
+	NDIlib_recv_get_performance(pNDI_recv, &p_total, &p_dropped);
 
 	bool bVideoBufferUnderflowDetected = false;
 	while (Samples->NumVideoSamples() > 1)
@@ -361,7 +366,10 @@ void FNDIMediaPlayer::TickInput(FTimespan DeltaTime, FTimespan Timecode)
 
 FString FNDIMediaPlayer::GetStats() const
 {
-	return FMediaIOCorePlayerBase::GetStats();
+	FString Stats;
+	Stats += FString::Printf(TEXT("Frames count		: %i\n"), p_total.video_frames);
+	Stats += FString::Printf(TEXT("Frames dropped	: %i\n"), p_dropped.video_frames);
+	return Stats;
 }
 
 bool FNDIMediaPlayer::IsHardwareReady() const

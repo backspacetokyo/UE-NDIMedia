@@ -20,6 +20,9 @@ class NDIMEDIA_API FNDIMediaPlayer
 	FNDIMediaModule* Module;
 	NDIlib_recv_instance_t pNDI_recv = nullptr;
 
+	int ReceiveTimeoutInMilliSeconds = 0;
+	NDIlib_recv_performance_t p_total, p_dropped;
+
 	FNDIMediaTextureSamplePool* TextureSamplePool;
 	FNDIMediaBinarySamplePool* MetadataSamplePool;
 

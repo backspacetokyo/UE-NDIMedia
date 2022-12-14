@@ -30,6 +30,19 @@ bool UNDIMediaCapture::ValidateMediaOutput() const
 	return true;
 }
 
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 1
+bool UNDIMediaCapture::InitializeCapture()
+{
+	if (!Super::InitializeCapture())
+		return false;
+
+	UNDIMediaOutput* Output = CastChecked<UNDIMediaOutput>(MediaOutput);
+	OutputPixelFormat = Output->OutputPixelFormat;
+	return InitNDI(Output);
+}
+
+#else
+
 bool UNDIMediaCapture::CaptureSceneViewportImpl(TSharedPtr<FSceneViewport>& InSceneViewport)
 {
 	UNDIMediaOutput* Output = CastChecked<UNDIMediaOutput>(MediaOutput);
@@ -41,6 +54,8 @@ bool UNDIMediaCapture::CaptureRenderTargetImpl(UTextureRenderTarget2D* InRenderT
 {
 	return false;
 }
+
+#endif
 
 bool UNDIMediaCapture::UpdateSceneViewportImpl(TSharedPtr<FSceneViewport>& InSceneViewport)
 {

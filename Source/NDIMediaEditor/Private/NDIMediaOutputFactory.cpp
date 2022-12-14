@@ -5,7 +5,7 @@
 #include <AssetTypeCategories.h>
 #include "NDIMedia/Public/NDIMediaOutput.h"
 
-#define LOCTEXT_NAMESPACE "NDIVirtualMediaOutputFactory"
+#define LOCTEXT_NAMESPACE "NDIMediaOutputFactory"
 
 UNDIMediaOutputFactory::UNDIMediaOutputFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

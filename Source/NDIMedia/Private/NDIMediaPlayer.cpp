@@ -148,6 +148,13 @@ void FNDIMediaPlayer::Close()
 void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 {
 	FMediaIOCorePlayerBase::TickFetch(DeltaTime, Timecode);
+}
+
+void FNDIMediaPlayer::TickInput(FTimespan DeltaTime, FTimespan Timecode)
+{
+	FMediaIOCorePlayerBase::TickInput(DeltaTime, Timecode);
+	
+	TickTimeManagement();
 
 	if (!pNDI_recv || CurrentState != EMediaState::Playing)
 	{
@@ -156,6 +163,23 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 	}
 
 	SetRate(1);
+
+	NDIlib_recv_queue_t p_queue_total;
+	NDIlib_recv_get_queue(pNDI_recv, &p_queue_total);
+
+	// clear queued frames
+	if (p_queue_total.video_frames > 1)
+	{
+		for (int i = 0; i < p_queue_total.video_frames-1; i++)
+		{
+			NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
+			NDIlib_recv_capture_v3(pNDI_recv, video_frame,
+				nullptr, nullptr,
+				0);
+			NDIlib_recv_free_video_v2(pNDI_recv, video_frame);
+			delete video_frame;
+		}
+	}
 
 	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
 	NDIlib_frame_type_e frame_type = NDIlib_recv_capture_v3(pNDI_recv, video_frame,
@@ -170,7 +194,7 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 		bVideoBufferUnderflowDetected = true;
 		Samples->PopVideo();
 	}
-
+	
 	while (Samples->NumMetadataSamples() > 1)
 		Samples->PopMetadata();
 
@@ -195,6 +219,9 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 				DecodedTime, FrameRate, DecodedTimecode);
 
 			Samples->AddMetadata(BinarySample);
+
+			if (FrameMetadataReceivedDelegate.IsBound())
+				FrameMetadataReceivedDelegate.Execute(FString(str.c_str()));
 		}
 
 		// video
@@ -357,11 +384,6 @@ void FNDIMediaPlayer::TickFetch(FTimespan DeltaTime, FTimespan Timecode)
 
 	NDIlib_recv_free_video_v2(pNDI_recv, video_frame);
 	delete video_frame;
-}
-
-void FNDIMediaPlayer::TickInput(FTimespan DeltaTime, FTimespan Timecode)
-{
-	TickTimeManagement();
 }
 
 FString FNDIMediaPlayer::GetStats() const

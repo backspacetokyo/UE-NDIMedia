@@ -12,6 +12,8 @@
 
 class FNDIMediaModule;
 
+DECLARE_DELEGATE_OneParam(FNDIMediaPlayerFrameMetadataReceivedDelegate, FString)
+
 class NDIMEDIA_API FNDIMediaPlayer
 	: public FMediaIOCorePlayerBase
 {
@@ -27,6 +29,7 @@ class NDIMEDIA_API FNDIMediaPlayer
 	FNDIMediaBinarySamplePool* MetadataSamplePool;
 
 public:
+	
 	FNDIMediaPlayer(IMediaEventSink& InEventSink);
 	virtual ~FNDIMediaPlayer() override;
 
@@ -49,4 +52,5 @@ public:
 	virtual const FSlateBrush* GetDisplayIcon() const override;
 #endif
 
+	FNDIMediaPlayerFrameMetadataReceivedDelegate FrameMetadataReceivedDelegate;
 };

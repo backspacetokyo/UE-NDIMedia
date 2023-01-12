@@ -88,4 +88,14 @@ public:
 #endif
 
 	FNDIMediaPlayerFrameMetadataReceivedDelegate FrameMetadataReceivedDelegate;
+
+public:
+	
+	FFrameRate FrameRate {60, 1};
+	void WaitForSync();
+
+private:
+
+	int64_t FrameTimeStamp = 0;
+	int64_t LastFrameTimeStamp = 0;
 };

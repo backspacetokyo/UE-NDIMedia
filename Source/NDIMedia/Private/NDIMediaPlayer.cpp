@@ -57,7 +57,7 @@ uint32 FNDIMediaPlayerThread::Run()
 		
 		if (frame_type == NDIlib_frame_type_video)
 			args.Player->OnInputFrameReceived(video_frame);
-
+		
 		NDIlib_recv_free_video_v2(pNDI_recv, video_frame);
 		delete video_frame;
 	}
@@ -73,9 +73,9 @@ void FNDIMediaPlayerThread::Stop()
 void FNDIMediaPlayer::OnInputFrameReceived(NDIlib_video_frame_v2_t* video_frame)
 {
 	const FTimespan DecodedTime = FTimespan::FromSeconds(GetPlatformSeconds());
-
-	const FFrameRate FrameRate(video_frame->frame_rate_N, video_frame->frame_rate_D);
 	const TOptional<FTimecode> DecodedTimecode;
+	
+	FrameRate = FFrameRate(video_frame->frame_rate_N, video_frame->frame_rate_D);
 
 	// metadata
 	if (video_frame->p_metadata)
@@ -248,6 +248,8 @@ void FNDIMediaPlayer::OnInputFrameReceived(NDIlib_video_frame_v2_t* video_frame)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Unsupported pixel format"));
 	}
+
+	FrameTimeStamp = video_frame->timestamp;
 }
 
 FNDIMediaPlayer::FNDIMediaPlayer(IMediaEventSink& InEventSink)
@@ -421,3 +423,22 @@ const FSlateBrush* FNDIMediaPlayer::GetDisplayIcon() const
 	return nullptr;
 }
 #endif
+
+void FNDIMediaPlayer::WaitForSync()
+{
+	if (CurrentState == EMediaState::Playing)
+	{
+		int Count = 0;
+		while (Count < 1000)
+		{
+			if (LastFrameTimeStamp != FrameTimeStamp)
+			{
+				LastFrameTimeStamp = FrameTimeStamp;
+				break;
+			}
+
+			FPlatformProcess::SleepNoStats(0.001);
+			Count += 1;
+		}
+	}
+}

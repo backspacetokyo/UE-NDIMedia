@@ -78,7 +78,7 @@ public class NDIMedia : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				"Core", "MediaAssets",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

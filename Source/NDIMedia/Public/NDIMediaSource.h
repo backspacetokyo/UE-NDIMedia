@@ -28,9 +28,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
 	ENDIMediaInputPixelFormat InputPixelFormat = ENDIMediaInputPixelFormat::NDI_PF_RGB;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NDI Media")
-	int ReceiveTimeoutInMilliSeconds = 0;
-
 	virtual bool Validate() const override { return true; }
 	virtual FString GetUrl() const override;
 };

@@ -47,6 +47,7 @@ bool UNDIMediaCapture::CaptureSceneViewportImpl(TSharedPtr<FSceneViewport>& InSc
 {
 	UNDIMediaOutput* Output = CastChecked<UNDIMediaOutput>(MediaOutput);
 	OutputPixelFormat = Output->OutputPixelFormat;
+	OutputFrameRate = Output->OutputFrameRate;
 	return InitNDI(Output);
 }
 
@@ -79,8 +80,8 @@ void UNDIMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 {
 	NDIFrameBuffer* FrameBuffer = new NDIFrameBuffer();
 
-	FrameBuffer->frame.frame_rate_N = 60;
-	FrameBuffer->frame.frame_rate_D = 1;
+	FrameBuffer->frame.frame_rate_N = OutputFrameRate.Numerator;
+	FrameBuffer->frame.frame_rate_D = OutputFrameRate.Denominator;
 	
 	if (OutputPixelFormat == ENDIMediaOutputPixelFormat::NDI_PF_P210)
 	{
@@ -112,8 +113,6 @@ void UNDIMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 		video_frame_rgb.FourCC = NDIlib_FourCC_type_BGRX;
 		video_frame_rgb.p_data = &FrameBuffer->buffer[0];
 	}
-
-	// NDIlib_send_send_video_async_v2(pNDI_send, &FrameBuffer->frame);
 
 	{
 		FScopeLock ScopeLock(&RenderThreadCriticalSection);

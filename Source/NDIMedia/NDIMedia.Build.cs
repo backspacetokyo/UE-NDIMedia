@@ -98,6 +98,7 @@ public class NDIMedia : ModuleRules
 				"CinematicCamera",
 				"OpenColorIO",
 				"MovieSceneCapture",
+				"MediaFrameworkUtilities",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

@@ -60,6 +60,7 @@ class NDIMEDIA_API FNDIMediaPlayer
 	FNDIMediaBinarySamplePool* MetadataSamplePool;
 
 	TUniquePtr<FNDIMediaPlayerThread> Thread;
+	bool bInIsSRGBInput;
 
 	void OnInputFrameReceived(NDIlib_video_frame_v2_t* video_frame);
 	

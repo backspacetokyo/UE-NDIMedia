@@ -33,9 +33,6 @@ bool UNDIMediaCapture::ValidateMediaOutput() const
 #if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 1
 bool UNDIMediaCapture::InitializeCapture()
 {
-	if (!Super::InitializeCapture())
-		return false;
-
 	UNDIMediaOutput* Output = CastChecked<UNDIMediaOutput>(MediaOutput);
 	OutputPixelFormat = Output->OutputPixelFormat;
 	return InitNDI(Output);
@@ -149,29 +146,29 @@ bool UNDIMediaCapture::InitNDI(UNDIMediaOutput* Output)
 	{
 		while (this->NDISendThreadRunning)
 		{
-			bool has_queue = false;
+			bool bHasFrame = false;
 
 			{
 				FScopeLock ScopeLock(&this->RenderThreadCriticalSection);
-				has_queue = this->FrameBuffers.size() > 0;
+				bHasFrame = !this->FrameBuffers.empty();
+			}
+			
+			if (!bHasFrame)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				continue;
 			}
 
-			if (has_queue)
+			FScopeLock ScopeLock(&this->RenderThreadCriticalSection);
+			
+			while (!this->FrameBuffers.empty())
 			{
-				NDIFrameBuffer* FrameBuffer = nullptr;
-				{
-					FScopeLock ScopeLock(&this->RenderThreadCriticalSection);
-					FrameBuffer = this->FrameBuffers.front();
-					this->FrameBuffers.pop_front();
-				}
+				NDIFrameBuffer* FrameBuffer = FrameBuffer = this->FrameBuffers.front();
+				this->FrameBuffers.pop_front();
 
 				NDIlib_send_send_video_v2(pNDI_send, &FrameBuffer->frame);
 				
 				delete FrameBuffer;
-			}
-			else
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			}
 		}
 	});

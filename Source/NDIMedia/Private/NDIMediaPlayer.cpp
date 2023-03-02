@@ -340,7 +340,11 @@ bool FNDIMediaPlayer::Open(const FString& Url, const IMediaOptions* Options)
 
 		const UProxyMediaSource* Proxy = static_cast<const UProxyMediaSource*>(Options);
 		const UNDIMediaSource* Source = static_cast<const UNDIMediaSource*>(Proxy->GetMediaSource());
-		ENDIMediaInputPixelFormat NDIPixelFormat = Source->InputPixelFormat;
+
+		if (Source == nullptr)
+			Source = static_cast<const UNDIMediaSource*>(Options);
+
+		const ENDIMediaInputPixelFormat NDIPixelFormat = Source->InputPixelFormat;
 		bInIsSRGBInput = Source->bInIsSRGBInput;
 
 		NDIlib_recv_create_v3_t settings;

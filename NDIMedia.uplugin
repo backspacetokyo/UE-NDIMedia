@@ -38,7 +38,7 @@
 			"Enabled": true
 		},
 		{
-			"Name": "OpenColorIO",
+			"Name": "MediaFrameworkUtilities",
 			"Enabled": true
 		}
 	]

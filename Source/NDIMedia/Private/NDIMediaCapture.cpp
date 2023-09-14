@@ -14,7 +14,7 @@ struct NDIFrameBuffer
 };
 
 UNDIMediaCapture::UNDIMediaCapture(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super()
 {
 }
 

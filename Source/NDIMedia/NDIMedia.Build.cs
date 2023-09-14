@@ -64,25 +64,21 @@ public class NDIMedia : ModuleRules
 			new string[] {
 				Path.Combine(ndi_sdk_path, "Includes"),
 				// ... add public include paths required here ...
-			}
-			);
-				
-		
+			});
+
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
-			}
-			);
+			});
 			
 		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "MediaAssets",
+				"Core",
+				"MediaAssets",
 				// ... add other public dependencies that you statically link with here ...
-			}
-			);
-			
+			});
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
@@ -96,20 +92,16 @@ public class NDIMedia : ModuleRules
 				"MediaIOCore",
 				"TimeManagement",
 				"CinematicCamera",
-				"OpenColorIO",
 				"MovieSceneCapture",
+				"RenderCore",
 				"MediaFrameworkUtilities",
 				// ... add private dependencies that you statically link with here ...	
-			}
-			);
-		
-		
+			});
+			
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
-				// ... add any modules that your module loads dynamically here ...
-			}
-			);
+			});
 		
 		PublicAdditionalLibraries.AddRange(
 			new string[]

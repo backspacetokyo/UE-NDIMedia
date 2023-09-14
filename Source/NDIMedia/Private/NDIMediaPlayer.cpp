@@ -436,6 +436,13 @@ const FSlateBrush* FNDIMediaPlayer::GetDisplayIcon() const
 }
 #endif
 
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3
+TSharedPtr<FMediaIOCoreTextureSampleBase> FNDIMediaPlayer::AcquireTextureSample_AnyThread() const
+{
+	return TextureSamplePool->AcquireShared();
+}
+#endif
+
 void FNDIMediaPlayer::WaitForSync()
 {
 	if (CurrentState == EMediaState::Playing)

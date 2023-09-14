@@ -88,6 +88,10 @@ public:
 	virtual const FSlateBrush* GetDisplayIcon() const override;
 #endif
 
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3
+	virtual TSharedPtr<FMediaIOCoreTextureSampleBase> AcquireTextureSample_AnyThread() const override;
+#endif
+
 	FNDIMediaPlayerFrameMetadataReceivedDelegate FrameMetadataReceivedDelegate;
 
 public:

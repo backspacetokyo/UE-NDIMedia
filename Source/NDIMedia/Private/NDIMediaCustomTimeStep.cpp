@@ -25,8 +25,11 @@ void UNDIMediaCustomTimeStep::Shutdown(UEngine* InEngine)
 bool UNDIMediaCustomTimeStep::UpdateTimeStep(UEngine* InEngine)
 {
 	auto PlayerAsset = MediaPlayer.LoadSynchronous();
+	if (PlayerAsset == nullptr)
+		return false;
+	
 	auto Player = StaticCastSharedPtr<FNDIMediaPlayer>(PlayerAsset->GetPlayerFacade()->GetPlayer());
-	if (!Player.IsValid())
+	if (Player == nullptr || !Player.IsValid())
 		return false;
 
 	NDIMediaPlayer = Player;
